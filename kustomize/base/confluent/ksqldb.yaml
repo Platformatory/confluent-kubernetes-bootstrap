@@ -3,8 +3,10 @@ kind: KsqlDB
 metadata:
   name: ksqldb
 spec:
-  replicas: 1
+  replicas: 2
+  storageClass:
+    name: confluent-portworx-sc  
   image:
-    application: confluentinc/cp-ksqldb-server-operator:6.1.1.0
-    init: confluentinc/cp-init-container-operator:6.1.1.0
+    application: confluentinc/cp-ksqldb-server:7.0.1
+    init: confluentinc/confluent-init-container:2.2.0-1
   dataVolumeCapacity: 10Gi

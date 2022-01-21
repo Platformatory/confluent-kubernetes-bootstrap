@@ -140,3 +140,11 @@ To exhibit Flux, let's change our kafka replicas from the default of 3, to 4:
 ## KSQL
 
 ## Destroy the cluster
+
+## Need help/customization
+
+File a GitHub [issue](https://github.com/Platformatory/confluent-kubernetes-bootstrap/issues), send us an [email](mailto:pavan@platformatory.com).
+
+## Legalese
+
+Copyright © 2022 [Platformatory](https://platformatory.io/) | See [LICENCE](LICENSE) for full details.

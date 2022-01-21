@@ -4,7 +4,9 @@ metadata:
   name: kafka
 spec:
   replicas: 3
+  storageClass:
+    name: confluent-portworx-sc  
   image:
-    application: confluentinc/cp-server-operator:6.1.1.0
-    init: confluentinc/cp-init-container-operator:6.1.1.0
+    application: confluentinc/cp-server:7.0.1
+    init: confluentinc/confluent-init-container:2.2.0-1
   dataVolumeCapacity: 10Gi
