@@ -7,4 +7,8 @@ resources:
   - schema-registry.yaml
   - control-centre.yaml
   - ksqldb.yaml
-  - ca-pair-sslcerts.yaml
+  - ingress.yaml
+  - connect-bootstrap-service.yaml
+  - kafka-bootstrap-service.yaml
+  - ksqldb-bootstrap-service.yaml
+  - schemaregistry-bootstrap-service.yaml
