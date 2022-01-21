@@ -92,7 +92,23 @@ In many load balancer use cases, the decryption happens at the load balancer, an
 ### Prerequisites to setup sandbox cluster
 
 1. Portworx storage class
+
+Create a new storage class using the following command:
+
+```
+kubectl apply -f portworx.yaml
+```
+The storage class can be changed in the `kustomize/base/confluent` directory for each individual kafka component.
+
+```
+  storageClass:
+    name: confluent-portworx-sc  
+```
+
 2. A cluster level domain name
+
+We need to configure a cluster domain name. All the YAML templates have "my.domain.com". This should be replaced with a customized cluster domain name.
+
 3. Setting up of mTLS related secrets
 
 
