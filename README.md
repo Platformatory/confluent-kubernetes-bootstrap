@@ -157,6 +157,52 @@ To exhibit Flux, let's change our kafka replicas from the default of 3, to 4:
 
 ## Destroy the cluster
 
+## Replicating cluster artifacts
+
+In order to create new Kafka cluster to the Gitops repo, follow these steps:
+
+1. Copy over any of the environment directories to a new directory.
+
+```
+cp -r sandbox dev
+```
+
+2. Change stuff in the environment directory to tweak the cluster settings.
+
+3. Add a new Kustomization and namespace entry in the `flux-system` directory.
+
+Ex: prod-cluster.yaml
+
+```
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: confluent-prod
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
+kind: Kustomization
+metadata:
+  name: prod-cluster
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: confluent-infra
+  interval: 5m
+  path: ./kustomize/environments/prod
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+```
+
+**NOTE** it is recommended to deploy each cluster in a separate namespace to avoid resource labelling conflicts.
+
+4. Apply the kustomization artifact in the cluster.
+
+```
+kubectl apply -f prod-cluster.yaml
+```
+
 ## Need help/customization
 
 File a GitHub [issue](https://github.com/Platformatory/confluent-kubernetes-bootstrap/issues), send us an [email](mailto:pavan@platformatory.com).
