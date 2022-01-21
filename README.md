@@ -129,7 +129,7 @@ controlcenter-0                             1/1     Running    0          4h38m
 ingress-nginx-controller-5bb9984b7b-dbj45   1/1     Running    0          106m
 kafka-0                                     1/1     Running    0          58m
 kafka-1                                     1/1     Running    0          11h
-kafka-2                                     0/1     Running    0          11h
+kafka-2                                     1/1     Running    0          11h
 ksqldb-0                                    1/1     Running    0          148m
 ksqldb-1                                    1/1     Running    0          151m
 schemaregistry-0                            1/1     Running    0          13h
