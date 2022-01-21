@@ -1,0 +1,15 @@
+namespace: confluent-prod
+resources:
+- ../../base
+patchesStrategicMerge:
+  - control-centre.yaml
+  - kafka.yaml
+  - kafka-connect.yaml
+  - ksqldb.yaml
+  - schema-registry.yaml
+  - zookeeper.yaml
+  - ingress.yaml
+  - connect-bootstrap-service.yaml
+  - kafka-bootstrap-service.yaml
+  - ksqldb-bootstrap-service.yaml
+  - schemaregistry-bootstrap-service.yaml

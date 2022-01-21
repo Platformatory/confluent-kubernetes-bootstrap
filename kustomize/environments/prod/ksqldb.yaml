@@ -1,0 +1,15 @@
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: KsqlDB
+metadata:
+  name: ksqldb
+spec:
+  configOverrides:
+    server:
+      - ksql.schema.registry.url=https://schemaregistry-prod.my.domain.com
+  dataVolumeCapacity: 10Gi
+  tls:
+    secretRef: tls-group1
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka:9071

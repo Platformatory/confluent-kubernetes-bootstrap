@@ -1,0 +1,16 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: ControlCenter
+metadata:
+  name: controlcenter
+spec:
+  configOverrides:
+    server:
+      - confluent.controlcenter.schema.registry.url=https://schemaregistry.confluent.svc.cluster.local:8081
+      - confluent.controlcenter.ksql.ksqldb.url=https://ksqldb-bootstrap.confluent.svc.cluster.local:8088
+      - confluent.controlcenter.ksql.ksqldb.advertised.url=https://ksqldb-prod.my.domain.com
+      - confluent.controlcenter.connect.connect.cluster=https://connect-bootstrap.confluent.svc.cluster.local:8083
+  tls:
+    secretRef: tls-group1
+  dependencies:
+    kafka:
+      bootstrapEndpoint: kafka:9071

@@ -1,0 +1,16 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: Kafka
+metadata:
+  name: kafka
+spec:
+  tls:
+    secretRef: tls-group1
+  listeners:
+    external:
+      externalAccess:
+        type: staticForHostBasedRouting
+        staticForHostBasedRouting:
+          domain: prod.my.domain.com
+          port: 443
+      tls:
+        enabled: true
