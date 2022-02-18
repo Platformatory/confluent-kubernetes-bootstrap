@@ -281,25 +281,183 @@ zookeeper-0                                 1/1     Running    0          14h
 zookeeper-1                                 1/1     Running    0          14h
 zookeeper-2                                 1/1     Running    0          14h
 ```
+
+Let's ensure all the rolebindings are created as well.
+
+```
+$ kubectl get confluentrolebindings -n confluent
+NAME                        STATUS    KAFKACLUSTERID           PRINCIPAL        ROLE             KAFKARESTCLASS      AGE
+c3-pageviews                CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:c3          ResourceOwner    confluent/default   4h5m
+connect-pageviews           CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:connect     ResourceOwner    confluent/default   4h2m
+internal-connect-0          CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:connect     SecurityAdmin    confluent/default   4h41m
+internal-connect-1          CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:connect     ResourceOwner    confluent/default   4h41m
+internal-connect-2          CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:connect     DeveloperWrite   confluent/default   4h41m
+internal-controlcenter-0    CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:c3          SystemAdmin      confluent/default   4h41m
+internal-ksqldb-0           CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:ksql        ResourceOwner    confluent/default   4h41m
+internal-ksqldb-1           CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:ksql        ResourceOwner    confluent/default   4h41m
+internal-ksqldb-2           CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:ksql        DeveloperWrite   confluent/default   4h41m
+internal-schemaregistry-0   CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:sr          SecurityAdmin    confluent/default   4h41m
+internal-schemaregistry-1   CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:sr          ResourceOwner    confluent/default   4h41m
+testadmin-rb                CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:testadmin   ClusterAdmin     confluent/default   4h35m
+testadmin-rb-connect        CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:testadmin   SystemAdmin      confluent/default   4h35m
+testadmin-rb-ksql           CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:testadmin   ResourceOwner    confluent/default   4h35m
+testadmin-rb-sr             CREATED   Zy5MLHH1QTCFlZ07RlAW_w   User:testadmin   SystemAdmin      confluent/default   4h35m
+```
+
+
 To exhibit Flux, let's change our kafka replicas from the default of 3, to 4:
+
 * In the file `./kustomize/environments/sandbox/kafka.yaml` uncomment the line `#  replicas: 4`, commit that change to your repository (git), and push upstream.   The next time flux performs a 'sync' (observable in the 'source controller' logs), it will the change to the kafka spec, and in turn increase our kafka cluster from size '3' to '4'.
 
 
 ## Simple producer and consumer from the CLI
 
+Configure `kafka.properties`.
+
+```
+bootstrap.servers=kafka.my.domain.com:443
+security.protocol=SASL_SSL
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+  username="kafka" \
+  password="kafka-secret";
+ssl.truststore.location=client.truststore.p12
+ssl.truststore.password=mystorepassword
+ssl.truststore.type=PKCS12
+```
+
+For this, we need to generate an optional truststore if our TLS is self signed.
+
+```
+keytool -import -trustcacerts -noprompt \
+  -alias rootCA \
+  -file $TUTORIAL_HOME/certs/cacerts.pem \
+  -keystore $TUTORIAL_HOME/client/client.truststore.p12 \
+  -deststorepass mystorepassword \
+  -deststoretype pkcs12
+```
+
+Create a topic.
+
+```
+kubectl apply -f clients/topic.yml
+```
+
+Run producer in one window.
+
+```
+kafka-console-producer --bootstrap-server kafka.my.domain.com:443 --topic test --producer.config clients/kafka.properties
+```
+
+Run consumer in another window.
+
+```
+kafka-console-consumer --bootstrap-server kafka.my.domain.com:443 --topic test --consumer.config clients/kafka.properties
+```
+
 ## Kafka connect
 
 ### How to configure connect plugins
 
+New connect plugins can be added by configuring the YAML for connect in the `build` section.
+
+```
+  build:
+    type: onDemand
+    onDemand:
+      plugins:
+        locationType: confluentHub
+        confluentHub:
+          - name: kafka-connect-datagen
+            owner: confluentinc
+            version: 0.5.2
+```
+Once this is done and committed to the repo, it will reflect automatically in control center UI.
+
 ### How to add new topic
+
+Topics can be added by Kubernetes native CRs.
+
+Ex:
+
+```
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: elastic-0
+  namespace: confluent
+spec:
+  replicas: 1
+  partitionCount: 1
+  kafkaRest:
+    authentication:
+      type: bearer
+      bearer:
+        secretRef: rest-credential
+  configs:
+    cleanup.policy: "delete"
+  kafkaRestClassRef:
+    name: default
+```
+
+The `kafkaRestClassRef` is important in an RBAC enabled environment. Without this, the topic won't be created. They can be managed like any other kubernetes resource.
+
+```
+$ kubectl get topic -n confluent
+NAME        REPLICAS   PARTITION   STATUS    CLUSTERID                AGE
+pageviews   3          1           CREATED   Zy5MLHH1QTCFlZ07RlAW_w   4h56m
+
+```
 
 ### How to add new connector
 
-## Schema registry
+Connect workers are Kubernetes managed resources.
 
-## KSQL
+Ex:
+
+```
+apiVersion: platform.confluent.io/v1beta1
+kind: Connector
+metadata:
+  name: pageviews
+  namespace: confluent
+spec:
+  class: "io.confluent.kafka.connect.datagen.DatagenConnector"
+  taskMax: 4
+  connectClusterRef:
+    name: connect
+  configs:
+    kafka.topic: "pageviews"
+    quickstart: "pageviews"
+    key.converter: "org.apache.kafka.connect.storage.StringConverter"
+    value.converter: "org.apache.kafka.connect.json.JsonConverter"
+    value.converter.schemas.enable: "false"
+    max.interval: "100"
+    iterations: "100000"
+  connectRest:
+    authentication:
+      type: bearer
+      bearer:
+        secretRef: rest-credential
+```
+
+The `connectRest` section is important in an RBAC setting. The connect user, the SASL user need to have permissions to write to and read from this topic. Hence, we have to specify ACLs for the same.
+
+```
+kubectl apply -f connector-rb.yml
+```
+
+A working connector will show up like this:
+
+```
+kubectl get connector -n confluent
+NAME        STATUS    CONNECTORSTATUS   TASKS-READY   AGE
+pageviews   CREATED   RUNNING           0/4           4h18m
+```
 
 ## Destroy the cluster
+
+`git rm -rf` and commit-push of a cluster version along with it's kustomize components will remove the cluster, associated configmaps, volumes and pods from that namespace. It won't clear the topics, connectors, and secrets created outside the purview of Flux. They have to be removed manually.
 
 ## Replicating cluster artifacts
 
@@ -348,6 +506,24 @@ kubectl apply -f prod-cluster.yaml
 ```
 
 ## Adding new users
+
+Make a new entry in the `creds/creds-kafka-sasl-users.json` and recreate the credentials secret.
+
+```
+kubectl create secret generic credential \
+  --save-config --dry-run=client \
+  --from-file=plain-users.json=credentials/creds-kafka-sasl-users.json \
+  --from-file=digest-users.json=credentials/creds-zookeeper-sasl-digest-users.json \
+  --from-file=digest.txt=credentials/creds-kafka-zookeeper-credentials.txt \
+  --from-file=plain.txt=credentials/creds-client-kafka-sasl-user.txt \
+  --from-file=basic.txt=credentials/creds-control-center-users.txt \
+  --from-file=ldap.txt=credentials/ldap.txt \
+  --namespace <cluster-namespace> -o yaml | kubectl apply -f -
+```
+
+This will be reflected automatically in the cluster without a restart.
+
+**NOTE** it is important to store these secrets using a secret management solution like Vault or Bitnami sealed secrets instead of plain text in version control.
 
 ## Production cluster sizing recommendations
 
