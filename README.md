@@ -10,8 +10,134 @@ Flux will monitor the Helm repository, and can be configured to automatically up
 
 ## Prerequisites
 
-A CNCF compatible Kubernetes cluster.
+### Overall prerequisites
 
+1. A CNCF compatible Kubernetes cluster.
+
+2. A kubernetes secret in the flux-system namespace to store git ssh credentials. This is required by Flux to sync private repositories.
+
+```
+ssh-keygen -q -N "" -f ./identity
+ssh-keyscan github.com > ./known_hosts
+
+kubectl create secret generic ssh-credentials \
+    --from-file=./identity \
+    --from-file=./identity.pub \
+    --from-file=./known_hosts -n flux-system
+```
+
+3. Configuration and setup of openldap. This is used as an interim LDAP server in place of LDAP-configured Azure AD.
+
+```
+helm upgrade --install -f assets/openldap/ldaps-rbac.yaml test-ldap assets/openldap --namespace confluent
+```
+
+Check whether LDAP is working correctly.
+
+```
+kubectl --namespace confluent exec -it ldap-0 -- bash
+
+$ ldapsearch -LLL -x -H ldap://ldap.confluent.svc.cluster.local:389 -b 'dc=test,dc=com' -D "cn=mds,dc=test,dc=com" -w 'Developer!'
+```
+
+Optionally, an openldap instance can be deployed for each confluent cluster if needed, with its own set of groups and users.
+
+### Per cluster prerequisites
+
+**NOTE** It is recommended to deploy one confluent cluster per namespace. Thus, all the following resources are created in the cluster's namespace.
+
+1. Self signed keys for autogeneration of certificates. These certificates are used for inter-component TLS communication which is mandatory for a production setup.
+
+Generate a CA pair to use.
+
+Then, provide the certificate authority as a Kubernetes secret `ca-pair-sslcerts`. The name of the secret is by convention and should not be anything else.
+
+```
+cd certs
+openssl genrsa -out ca-key.pem 2048
+openssl req -new -key ca-key.pem -x509 \
+  -days 1000 \
+  -out ca.pem \
+  -subj "/C=US/ST=CA/L=MountainView/O=Confluent/OU=Operator/CN=TestCA"
+```
+
+```
+kubectl -n <cluster-namespace> create secret tls ca-pair-sslcerts \
+    --cert=certs/ca.pem \
+    --key=certs/ca-key.pem 
+```
+
+2. Kubernetes secret for external access TLS.
+
+```
+kubectl create secret generic tls-group1 \
+  --from-file=fullchain.pem=generated/server.pem \
+  --from-file=cacerts.pem=generated/ca.pem \
+  --from-file=privkey.pem=generated/server-key.pem \
+  --namespace <cluster-namespace>
+```
+
+**NOTE** This command might vary slightly if you are using certificates purchased from a certificate authority.
+
+3. Authentication credentials.
+
+```
+kubectl create secret generic credential \
+  --from-file=plain-users.json=credentials/creds-kafka-sasl-users.json \
+  --from-file=digest-users.json=credentials/creds-zookeeper-sasl-digest-users.json \
+  --from-file=digest.txt=credentials/creds-kafka-zookeeper-credentials.txt \
+  --from-file=plain.txt=credentials/creds-client-kafka-sasl-user.txt \
+  --from-file=basic.txt=credentials/creds-control-center-users.txt \
+  --from-file=ldap.txt=credentials/ldap.txt \
+  --namespace <cluster-namespace>
+```
+
+4. RBAC principal credentials
+
+Create the MDS token.
+
+```
+cd mds
+openssl genrsa -out mds-tokenkeypair 2048
+openssl rsa -in mds-tokenkeypair -outform PEM -pubout -out mds-publickey
+```
+
+```
+kubectl create secret generic mds-token \
+  --from-file=mdsPublicKey.pem=mds/mds-publickey \
+  --from-file=mdsTokenKeyPair.pem=mds/mds-tokenkeypair \
+  --namespace <cluster-namespace>
+```
+
+Component RBAC credentials.
+
+```
+# Kafka RBAC credential
+kubectl create secret generic mds-client \
+  --from-file=bearer.txt=credentials/bearer.txt \
+  --namespace <cluster-namespace>
+# Control Center RBAC credential
+kubectl create secret generic c3-mds-client \
+  --from-file=bearer.txt=credentials/c3-mds-client.txt \
+  --namespace <cluster-namespace>
+# Connect RBAC credential
+kubectl create secret generic connect-mds-client \
+  --from-file=bearer.txt=credentials/connect-mds-client.txt \
+  --namespace <cluster-namespace>
+# Schema Registry RBAC credential
+kubectl create secret generic sr-mds-client \
+  --from-file=bearer.txt=credentials/sr-mds-client.txt \
+  --namespace <cluster-namespace>
+# ksqlDB RBAC credential
+kubectl create secret generic ksqldb-mds-client \
+  --from-file=bearer.txt=credentials/ksqldb-mds-client.txt \
+  --namespace <cluster-namespace>
+# Kafka REST credential
+kubectl create secret generic rest-credential \
+  --from-file=bearer.txt=credentials/bearer.txt \
+  --from-file=basic.txt=credentials/bearer.txt \
+  --namespace <cluster-namespace>
+```
 
 ## Repository structure
 

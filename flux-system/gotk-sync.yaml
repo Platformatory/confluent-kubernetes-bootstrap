@@ -8,7 +8,9 @@ spec:
   interval: 1m0s
   ref:
     branch: main
-  url: https://github.com/Platformatory/confluent-kubernetes-bootstrap.git
+  url: ssh://github.com/Platformatory/confluent-kubernetes-bootstrap
+  secretRef:
+    name: ssh-credentials  
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1beta1
 kind: Kustomization
