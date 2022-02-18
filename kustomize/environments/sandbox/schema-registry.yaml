@@ -3,8 +3,6 @@ kind: SchemaRegistry
 metadata:
   name: schemaregistry
 spec:
-  tls:
-    secretRef: tls-group1
   dependencies:
     kafka:
-      bootstrapEndpoint: kafka:9071
+      bootstrapEndpoint: kafka.sandbox.svc.cluster.local:9071 # <---- FQDN of service overridden
