@@ -525,8 +525,25 @@ This will be reflected automatically in the cluster without a restart.
 
 **NOTE** it is important to store these secrets using a secret management solution like Vault or Bitnami sealed secrets instead of plain text in version control.
 
+## Increasing storage
+
+The prerequiste for this is that the Kubernetes storage class associated with the cluster supports the `allowVolumeExpansion: true` property set.
+
+Once this is confirmed, the respective component's `dataVolumeCapacity` can be resized and applied via Flux.
+
 ## Production cluster sizing recommendations
 
+It is recommended to run at least 3 replicas each of Kafka and Zookeeper. The exact sizing requirements for disk, memory and CPU are documented [here](https://docs.confluent.io/operator/current/co-plan.html#cluster-sizing).
+
+Also, it is recommended to run Zookeeper pods and Kafka pods in mutually exclusive Kubernetes nodes. This can be achieved by setting [interpod affinity/anti affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity) and [node selectors](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) in the `podTemplate` section of the component.
+
+
+Please note that the following things cannot be changed for an existing cluster:
+
+1. enable RBAC for a non RBAC cluster.
+2. enable TLS communication for a non TLS cluster.
+3. The storage class used for PVCs.
+4. The external access mechanism for kafka brokers.
 
 ## Troubleshooting
 
