@@ -1,0 +1,12 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: testadmin-rb-connect
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: testadmin
+  clustersScopeByIds:
+    connectClusterId: confluent.connect
+  role: SystemAdmin
