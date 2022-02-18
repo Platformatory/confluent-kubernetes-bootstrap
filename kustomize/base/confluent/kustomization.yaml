@@ -13,3 +13,7 @@ resources:
   - ksqldb-bootstrap-service.yaml
   - schemaregistry-bootstrap-service.yaml
   - kafka-rest-class.yaml
+  - kafka-rb.yaml
+  - schema-registry-rb.yaml
+  - connect-rb.yaml
+  - ksqldb-rb.yaml
