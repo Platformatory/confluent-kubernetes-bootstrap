@@ -1,5 +1,4 @@
----
 apiVersion: platform.confluent.io/v1beta1
-kind: KsqlDB
+kind: KafkaRestClass
 metadata:
-  name: ksqldb
+  name: default

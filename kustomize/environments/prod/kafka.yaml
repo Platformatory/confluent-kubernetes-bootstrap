@@ -8,9 +8,5 @@ spec:
   listeners:
     external:
       externalAccess:
-        type: staticForHostBasedRouting
         staticForHostBasedRouting:
-          domain: prod.my.domain.com
-          port: 443
-      tls:
-        enabled: true
+          domain: my.domain.commmm # <--- example modification

@@ -13,3 +13,4 @@ patchesStrategicMerge:
   - kafka-bootstrap-service.yaml
   - ksqldb-bootstrap-service.yaml
   - schemaregistry-bootstrap-service.yaml
+  - kafka-rest-class.yaml
