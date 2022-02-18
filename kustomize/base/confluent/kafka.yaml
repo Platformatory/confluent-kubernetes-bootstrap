@@ -46,7 +46,7 @@ spec:
       provider: 
         type: ldap
         ldap:
-          address: ldap://ldap.confluent.svc.cluster.local:389
+          address: ldap://ldap:389
           authentication:
             type: simple
             simple:
@@ -68,7 +68,7 @@ spec:
         bearer:
           secretRef: mds-client
     zookeeper:
-      endpoint: zookeeper.confluent.svc.cluster.local:2182
+      endpoint: zookeeper:2182
       authentication:
         type: digest
         jaasConfig:
