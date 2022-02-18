@@ -10,6 +10,14 @@ Flux will monitor the Helm repository, and can be configured to automatically up
 
 ## Prerequisites
 
+## Tools needed
+
+1. kubectl
+2. confluent platform CLI binaries
+3. kustomize(optional)
+4. helm(optional)
+5. Flux CLI(optional)
+
 ### Overall prerequisites
 
 1. A CNCF compatible Kubernetes cluster.
@@ -41,6 +49,21 @@ $ ldapsearch -LLL -x -H ldap://ldap.confluent.svc.cluster.local:389 -b 'dc=test,
 ```
 
 Optionally, an openldap instance can be deployed for each confluent cluster if needed, with its own set of groups and users.
+
+4. Portworx storage class
+
+Create a new storage class using the following command:
+
+```
+kubectl apply -f portworx.yaml
+```
+The storage class can be changed in the `kustomize/base/confluent` directory for each individual kafka component.
+
+```
+  storageClass:
+    name: confluent-portworx-sc  
+```
+
 
 ### Per cluster prerequisites
 
@@ -139,6 +162,16 @@ kubectl create secret generic rest-credential \
   --namespace <cluster-namespace>
 ```
 
+5. A cluster level domain name
+
+We need to configure a cluster domain name. All the YAML templates have "my.domain.com". This should be replaced with a customized cluster domain name. The general naming convention is:
+
+```
+confluent-<component>-<cloud>-<env>.domain.com
+```
+
+for instance, the kafka DNS in Alicloud sandbox will be `confluent-kafka-ali-sandbox.domain.com`.
+
 ## Repository structure
 
 The Git repository contains the following top directories:
@@ -215,32 +248,17 @@ In many load balancer use cases, the decryption happens at the load balancer, an
  After a successful installation of Confluent operator and Nginx controller, we will proceed to deploy our first environment located at  `./kustomize/environments/sandbox`.
 
 
-### Prerequisites to setup sandbox cluster
-
-1. Portworx storage class
-
-Create a new storage class using the following command:
-
-```
-kubectl apply -f portworx.yaml
-```
-The storage class can be changed in the `kustomize/base/confluent` directory for each individual kafka component.
-
-```
-  storageClass:
-    name: confluent-portworx-sc  
-```
-
-2. A cluster level domain name
-
-We need to configure a cluster domain name. All the YAML templates have "my.domain.com". This should be replaced with a customized cluster domain name.
-
-3. Setting up of mTLS related secrets
-
-
 ### Deployment Process
 * Navigate to `./flux-system`
 * run `kubectl apply -f sandbox-cluster.yaml`
+
+Please add A entries in the DNS provider for each of the component ingresses. This will point to the external IP of the nginx ingress controller service.
+
+```
+$ kubectl get svc
+NAME                                 TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)                      AGE
+ingress-nginx-controller             LoadBalancer   10.0.37.51     52.226.213.45   80:30899/TCP,443:32165/TCP   3d17h
+```
 
 ### Demostrating Gitops of the installed cluster
 
@@ -328,6 +346,11 @@ spec:
 ```
 kubectl apply -f prod-cluster.yaml
 ```
+
+## Adding new users
+
+## Production cluster sizing recommendations
+
 
 ## Need help/customization
 
