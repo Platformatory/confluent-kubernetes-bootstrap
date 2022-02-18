@@ -352,6 +352,44 @@ kubectl apply -f prod-cluster.yaml
 ## Production cluster sizing recommendations
 
 
+## Troubleshooting
+
+### Inspecting what changes will be applied
+
+If you need to visualize and debug what the patched output will be there for every artifact change, you can run kustomize on your local and check before applying the change.
+
+```
+cd kustomize/environments
+kustomize build sandbox > sandbox-cluster.yml
+vi sandbox-cluster.yml
+```
+
+### Checking configuration of kafka component
+
+To check the configuration of any kafka component,
+
+```
+kubectl get configmap <component-name>-shared-config -n confluent -o yaml
+```
+
+### Unable to read from topics/unable to produce messages/connector issues
+
+This is most likely an RBAC issue.
+
+```
+kubectl logs -l app=kafka -n confluent  | grep -i "is denied operation"
+```
+
+Example output:
+
+```
+[INFO] 2022-02-18 02:18:56,766 [qtp2077969769-160] kafka.authorizer.logger logAuthorization - Principal = User:kafka is Denied Operation = Pause from host = 127.0.0.1 on resource = Connector:LITERAL:pageviews
+[INFO] 2022-02-18 02:18:56,767 [qtp2077969769-160] kafka.authorizer.logger logAuthorization - Principal = User:kafka is Denied Operation = Create from host = 127.0.0.1 on resource = Connector:LITERAL:pageviews
+[INFO] 2022-02-18 02:18:56,768 [qtp2077969769-160] kafka.authorizer.logger logAuthorization - Principal = User:kafka is Denied Operation = Delete from host = 127.0.0.1 on resource = Connector:LITERAL:pageviews
+[INFO] 2022-02-18 02:18:56,768 [qtp2077969769-160] kafka.authorizer.logger logAuthorization - Principal = User:kafka is Denied Operation = ReadActiveTopics from host = 127.0.0.1 on resource = Connector:LITERAL:pageviews
+[INFO] 2022-02-18 02:18:56,768 [qtp2077969769-160] kafka.authorizer.logger logAuthorization - Principal = User:kafka is Denied Operation = Scale from host = 127.0.0.1 on resource = Connector:LITERAL:pageviews
+```
+
 ## Need help/customization
 
 File a GitHub [issue](https://github.com/Platformatory/confluent-kubernetes-bootstrap/issues), send us an [email](mailto:pavan@platformatory.com).
