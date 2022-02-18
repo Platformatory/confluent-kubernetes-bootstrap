@@ -1,0 +1,50 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: kafka-pageviews
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: kafka
+  clustersScopeByIds:
+    connectClusterId: confluent.connect
+  role: ResourceOwner
+  resourcePatterns:
+    - name: pageviews
+      patternType: LITERAL
+      resourceType: Connector
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: c3-pageviews
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: c3
+  clustersScopeByIds:
+    connectClusterId: confluent.connect
+  role: ResourceOwner
+  resourcePatterns:
+    - name: pageviews
+      patternType: LITERAL
+      resourceType: Connector
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: ConfluentRolebinding
+metadata:
+  name: connect-pageviews
+  namespace: confluent
+spec:
+  principal:
+    type: user
+    name: connect
+  clustersScopeByIds:
+    connectClusterId: confluent.connect
+  role: ResourceOwner
+  resourcePatterns:
+    - name: pageviews
+      patternType: LITERAL
+      resourceType: Connector
