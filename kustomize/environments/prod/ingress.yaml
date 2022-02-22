@@ -15,7 +15,6 @@ spec:
         - b0-prod.my.domain.com
         - b1-prod.my.domain.com
         - b2-prod.my.domain.com
-        - controlcenter-prod.my.domain.com
         - ksqldb-prod.my.domain.com
         - connect-prod.my.domain.com
         - schemaregistry-prod.my.domain.com
@@ -44,12 +43,6 @@ spec:
           - backend:
               serviceName: kafka-2-internal
               servicePort: 9092
-    - host: controlcenter-prod.my.domain.com
-      http:
-        paths:
-          - backend:
-              serviceName: controlcenter-0-internal
-              servicePort: 9021
     - host: ksqldb-prod.my.domain.com
       http:
         paths:

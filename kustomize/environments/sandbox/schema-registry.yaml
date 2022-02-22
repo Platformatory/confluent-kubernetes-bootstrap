@@ -2,7 +2,3 @@ apiVersion: platform.confluent.io/v1beta1
 kind: SchemaRegistry
 metadata:
   name: schemaregistry
-spec:
-  dependencies:
-    kafka:
-      bootstrapEndpoint: kafka.sandbox.svc.cluster.local:9071 # <---- FQDN of service overridden

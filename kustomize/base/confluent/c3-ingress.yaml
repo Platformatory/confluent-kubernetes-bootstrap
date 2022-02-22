@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1beta1 
+kind: Ingress 
+metadata: 
+ name: c3-ingress 
+ annotations: 
+   kubernetes.io/ingress.class: nginx 
+   nginx.ingress.kubernetes.io/backend-protocol: "HTTPS" 
+spec: 
+ tls: 
+   - hosts: 
+       - c3.my.domain.com
+     secretName: c3-tls
+ rules: 
+   - host: c3.my.domain.com
+     http: 
+       paths: 
+         - backend: 
+             serviceName: controlcenter-0-internal 
+             servicePort: 9021

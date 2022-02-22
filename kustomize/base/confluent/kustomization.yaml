@@ -17,3 +17,4 @@ resources:
   - schema-registry-rb.yaml
   - connect-rb.yaml
   - ksqldb-rb.yaml
+  - c3-ingress.yaml
