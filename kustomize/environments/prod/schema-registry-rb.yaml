@@ -8,5 +8,5 @@ spec:
     type: user
     name: testadmin
   clustersScopeByIds:
-    schemaRegistryClusterId: id_schemaregistry_confluent
+    schemaRegistryClusterId: id_schemaregistry_confluent-prod
   role: SystemAdmin

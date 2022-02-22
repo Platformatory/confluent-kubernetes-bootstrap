@@ -8,7 +8,7 @@ spec:
     type: user
     name: testadmin
   clustersScopeByIds:
-    ksqlClusterId: confluent.ksqldb_
+    ksqlClusterId: confluent-prod.ksqldb_
   role: ResourceOwner
   resourcePatterns:
     - name: ksql-cluster

@@ -8,5 +8,5 @@ spec:
     type: user
     name: testadmin
   clustersScopeByIds:
-    connectClusterId: confluent.connect
+    connectClusterId: confluent-prod.connect
   role: SystemAdmin

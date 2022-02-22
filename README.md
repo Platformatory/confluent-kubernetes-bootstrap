@@ -656,6 +656,14 @@ Example output:
 [INFO] 2022-02-18 02:18:56,768 [qtp2077969769-160] kafka.authorizer.logger logAuthorization - Principal = User:kafka is Denied Operation = Scale from host = 127.0.0.1 on resource = Connector:LITERAL:pageviews
 ```
 
+**NOTE** ACL issues could also be due to misconfigured confluent rolebindings. When a clsuter is deleted and recreated, the rolebindings also need to be deleted and recreated explicitly as they are mapped to the unique cluster ID that gets generated.
+
+To force delete the rolebindings, run
+
+```
+for rb in $(kubectl -n <cluster-namespace> get cfrb --no-headers -ojsonpath='{.items[*].metadata.name}'); do kubectl -n <cluster-namespace>  patch cfrb $rb -p '{"metadata":{"finalizers":[]}}' --type=merge; done
+```
+
 ## Need help/customization
 
 File a GitHub [issue](https://github.com/Platformatory/confluent-kubernetes-bootstrap/issues), send us an [email](mailto:pavan@platformatory.com).
