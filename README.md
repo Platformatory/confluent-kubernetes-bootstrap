@@ -545,7 +545,80 @@ Please note that the following things cannot be changed for an existing cluster:
 3. The storage class used for PVCs.
 4. The external access mechanism for kafka brokers.
 
-## Troubleshooting
+## Datadog integration
+
+### Prerequisites
+
+Datadog daemonset and related configuration to be installed in all nodes.
+
+```
+helm upgrade --install datadog --set datadog.site='datadoghq.com' --set datadog.apiKey='XXXX' --set agents.image.tagSuffix='jmx' --set datadog.kubelet.tlsVerify='false' datadog/datadog --set targetSystem=linux
+```
+
+For the kafka pods, JMX is already exposed in port `7203`. We have to give this annotation in the pod using the `podTemplate` section of the Kafka CR.
+
+```
+spec:
+  podTemplate:
+    annotations:
+        ad.datadoghq.com/kafka.check_names: '["kafka"]'
+        ad.datadoghq.com/kafka.init_configs: '[{"is_jmx": true, "collect_default_metrics": true}]'
+        ad.datadoghq.com/kafka.instances: '[{"host": "%%host%%","port":"7203"}]'
+        ad.datadoghq.com/kafka.logs: '[{"source":"kafka","service":"kafka"}]'
+```
+This is added in the prod variation of the kustomize template already.
+
+In addition to this, if we need to specify custom JMX beans to be tracked, we need to update the `metrics.yaml` in `datadog/` folder, rebuild the custom conatiner image and update the daemonset with the new image.
+
+```
+cd datadog
+# edit metrics.yaml and config.yaml
+docker build . -t myregistry.com/datadogagent:7.33.0-jmx
+docker push myregistry.com/datadogagent:7.33.0-jmx
+# update daemonset with myregistry.com/datadogagent:7.33.0-jmx for agent image.
+```
+
+This will yield s kafka metrics dashboard automatically on the datadog web UI.
+
+![kafka dashboard](datadog.png)
+
+### Troubleshooting
+
+#### No metrics are available
+
+Check agent logs to see if there is any error connecting to datadoghq.
+
+If agent is connected to datadoghq and we still don't get JMX metrics, run `agent status` command inside the pod.
+
+It should show something similar to this:
+
+```
+...
+
+========
+JMXFetch
+========
+
+  Information
+  ==================
+    runtime_version : 11.0.13
+    version : 0.44.6
+  Initialized checks
+  ==================
+    kafka
+      instance_name : kafka-10.244.0.10-7203
+      message : <no value>
+      metric_count : 203
+      service_check_count : 0
+      status : OK
+  Failed checks
+  =============
+
+...
+
+```
+
+## Troubleshooting Kafka clusters
 
 ### Inspecting what changes will be applied
 
