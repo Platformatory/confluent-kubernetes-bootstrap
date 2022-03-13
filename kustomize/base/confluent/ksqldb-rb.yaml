@@ -2,15 +2,3 @@ apiVersion: platform.confluent.io/v1beta1
 kind: ConfluentRolebinding
 metadata:
   name: testadmin-rb-ksql
-  namespace: confluent
-spec:
-  principal:
-    type: user
-    name: testadmin
-  clustersScopeByIds:
-    ksqlClusterId: confluent.ksqldb_
-  role: ResourceOwner
-  resourcePatterns:
-    - name: ksql-cluster
-      patternType: LITERAL
-      resourceType: KsqlCluster

@@ -2,11 +2,10 @@ apiVersion: platform.confluent.io/v1beta1
 kind: ConfluentRolebinding
 metadata:
   name: testadmin-rb-sr
-  namespace: confluent
 spec:
   principal:
     type: user
     name: testadmin
   clustersScopeByIds:
-    schemaRegistryClusterId: id_schemaregistry_confluent
+    schemaRegistryClusterId: id_schemaregistry_sandbox
   role: SystemAdmin
